@@ -3,7 +3,7 @@ import json
 import uuid
 import smtplib
 from email.message import EmailMessage
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
@@ -168,4 +168,5 @@ def manage_posts():
 
 if __name__ == '__main__':
     app.run()
+
 
