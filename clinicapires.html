@@ -384,33 +384,33 @@ async function redefinirSenha() {
 
 // --- Funções de Cadastro ---
 
+// Abre a tela de cadastro
 function mostrarCadastro() {
     document.getElementById('login-form').style.display = 'none';
-    document.getElementById('recuperacao-form').style.display = 'none';
     document.getElementById('cadastro-form').style.display = 'block';
 }
 
+// Envia os dados para o seu Backend em Python
 async function fazerCadastro() {
     const email = document.getElementById('cad-email').value;
     const password = document.getElementById('cad-senha').value;
     
     if(!email || !password) {
-        alert("Por favor, preencha todos os campos.");
+        alert("Por favor, preencha o e-mail e a senha!");
         return;
     }
 
-    const res = await fetch('/api/cadastro', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({email, password})
-    });
-    
-    const data = await res.json();
-    alert(data.message);
-    
-    if(data.success) {
-        // Limpa a tela e volta para o login
-        renderAdminArea(); 
+    try {
+        const res = await fetch('/api/cadastro', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        alert(data.message);
+        if(data.success) renderAdminArea(); // Volta para o login se der certo
+    } catch (err) {
+        alert("Erro: O servidor Python está desligado!");
     }
 }
 
