@@ -49,8 +49,8 @@ if not users:
 # --- ROTAS ---
 
 @app.route('/')
-def index():
-    return send_from_directory('.', 'clinicapires.html')
+def home():
+    return render_template('clinicapires.html')
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -168,3 +168,4 @@ def manage_posts():
 
 if __name__ == '__main__':
     app.run()
+
