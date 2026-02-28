@@ -3,12 +3,20 @@ import json
 import uuid
 import smtplib
 from email.message import EmailMessage
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory, render_template
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 
 app = Flask(__name__)
+
+
+base_dir = os.path.abspath(os.path.dirname(__file__))
+template_dir = os.path.join(base_dir, 'templates')
+static_dir = os.path.join(base_dir, 'static')
+
+
+app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 CORS(app, resources={r"/api/*": {"origins": "https://clinicapiresmed-gif.github.io"}})
 
 # Configurações de Pastas e Arquivos
@@ -20,7 +28,7 @@ DB_USERS = 'users.json'
 DB_POSTS = 'posts.json'
 
 # --- CONFIGURAÇÃO DE E-MAIL CORRIGIDA (Para Outlook/Hotmail) ---
-SMTP_SERVER = "smtp.gmail.com" 
+SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 SMTP_EMAIL = "clinicapiresmed@ogmail.com"
 SMTP_PASSWORD = "pqnk aaog rpwy lthr" # Certifique-se que esta senha está correta
@@ -49,8 +57,8 @@ if not users:
 # --- ROTAS ---
 
 @app.route('/')
-def home():
-    return render_template('clinicapires.html')
+def index():
+    return send_from_directory('.', 'clinicapires.html')
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -63,13 +71,13 @@ def cadastro():
     email = data.get('email')
     password = data.get('password')
     users = load_json(DB_USERS, {})
-    
+
     if not email or not password:
         return jsonify({"success": False, "message": "Preencha todos os campos!"}), 400
 
     if email in users:
         return jsonify({"success": False, "message": "E-mail já cadastrado!"}), 400
-    
+
     # Agora dentro da função e indentado corretamente
     users[email] = {
         'password': generate_password_hash(password),
@@ -84,7 +92,7 @@ def login():
     email = data.get('email')
     password = data.get('password')
     users = load_json(DB_USERS, {})
-    
+
     if email in users and check_password_hash(users[email]['password'], password):
         token = str(uuid.uuid4())
         users[email]['token'] = token
@@ -96,19 +104,19 @@ def login():
 def esqueci_senha():
     email = request.json.get('email')
     users = load_json(DB_USERS, {})
-    
+
     if email in users:
         token = str(uuid.uuid4())[:8]
         users[email]['recovery_token'] = token
         save_json(DB_USERS, users)
-        
+
         try:
             msg = EmailMessage()
             msg.set_content(f"Seu código de recuperação é: {token}")
             msg['Subject'] = "Recuperação de Senha - Clínica Pires"
             msg['From'] = SMTP_EMAIL
             msg['To'] = email
-            
+
             server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
             server.starttls()
             server.login(SMTP_EMAIL, SMTP_PASSWORD)
@@ -117,7 +125,7 @@ def esqueci_senha():
             return jsonify({"success": True, "message": "E-mail enviado!"})
         except Exception as e:
             return jsonify({"success": False, "message": f"Erro no e-mail: {str(e)}"}), 500
-            
+
     return jsonify({"success": False, "message": "E-mail não encontrado."}), 404
 
 @app.route('/api/redefinir-senha', methods=['POST'])
@@ -127,7 +135,7 @@ def redefinir_senha():
     token = data.get('token')
     nova_senha = data.get('nova_senha')
     users = load_json(DB_USERS, {})
-    
+
     if email in users and users[email].get('recovery_token') == token:
         users[email]['password'] = generate_password_hash(nova_senha)
         users[email]['recovery_token'] = None
@@ -140,12 +148,12 @@ def manage_posts():
     if request.method == 'GET':
         posts = load_json(DB_POSTS, [])
         return jsonify(posts)
-        
+
     if request.method == 'POST':
         token = request.headers.get('Authorization')
         users = load_json(DB_USERS, {})
         is_authenticated = any(u.get('token') == token for u in users.values())
-        
+
         if not is_authenticated:
             return jsonify({"success": False, "message": "Não autorizado"}), 401
 
@@ -166,7 +174,9 @@ def manage_posts():
         save_json(DB_POSTS, posts)
         return jsonify({"success": True, "post": new_post})
 
+        @app.route('/atravessia')
+        def atravessia():
+            return render_template('atravessia_no_rio.html')
+
 if __name__ == '__main__':
     app.run()
-
-
